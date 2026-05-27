@@ -1,5 +1,5 @@
-import { ChatApp } from "@/components/chat-app";
+import { ClaimLens } from "@/components/claimlens/claim-lens";
 
 export default function Home() {
-  return <ChatApp />;
+  return <ClaimLens />;
 }

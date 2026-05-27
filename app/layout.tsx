@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hackathon Starter — Subconscious Agents",
+  title: "ClaimLens — Multimodal voice agent for refund & warranty resolution",
   description:
-    "Chat and long-running agents powered by Subconscious, Vercel AI SDK, Baseten, and Cloudflare.",
+    "ClaimLens turns customer voice calls, damage photos, receipts, payment screenshots, and order records into verified refund or warranty resolutions. Built on Subconscious, Vercel AI SDK, Baseten, and Cloudflare.",
 };
 
 export default function RootLayout({
