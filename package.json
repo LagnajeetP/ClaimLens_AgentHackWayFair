@@ -1,6 +1,7 @@
 {
-  "name": "hack-webapp-starter",
-  "version": "0.1.0",
+  "name": "claimlens",
+  "version": "1.0.0",
+  "description": "ClaimLens — multimodal voice agent for refund and warranty resolution. Track winner at Beat The Clock Agent Hack (Wayfair × Subconscious × Baseten × Cloudflare).",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -26,5 +27,22 @@
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LagnajeetP/hack-webapp-starter.git"
+  },
+  "homepage": "https://hack.subconscious.dev/hacks/claimlens",
+  "keywords": [
+    "claimlens",
+    "ai-agents",
+    "customer-service",
+    "finops",
+    "baseten",
+    "subconscious",
+    "voicerun",
+    "wayfair",
+    "hackathon",
+    "nextjs"
+  ]
 }

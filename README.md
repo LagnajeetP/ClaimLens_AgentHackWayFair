@@ -1,168 +1,153 @@
 # ClaimLens
 
-> **Multimodal voice agent for refund and warranty resolution.**
-> ClaimLens turns messy customer calls, damage photos, receipts, payment
-> screenshots, and internal order records into one verified refund or
-> warranty resolution.
+**Track winner · Customer Service & FinOps** — [Beat The Clock Agent Hack](https://hack.subconscious.dev) · Boston Tech Week 2026
 
-**Track:** Agents for Customer Service & FinOps
-**Sponsors:** Wayfair · Subconscious · Baseten · Cloudflare
+Multimodal voice agent that turns customer calls, damage photos, receipts, and payment screenshots into verified refund or warranty resolutions — with confidence scoring, policy reasoning, and a full audit trail.
+
+[**Live showcase**](https://hack.subconscious.dev/hacks/claimlens) · [**All hack projects**](https://hack.subconscious.dev)
 
 ---
 
-## What it does
+## Team
 
-A customer service rep clicks the mic. The customer says:
+| Name | |
+|------|--|
+| **Lagnajeet Panigrahi** | |
+| **Sanat Patki** | |
+| **Vasudevan Lakshmanan** | |
 
-> *"I ordered a dining chair and it arrived yesterday with a cracked leg.
-> I also see two charges on my card for the same amount. I need this fixed today."*
-
-ClaimLens then:
-
-1. Transcribes the voice with the browser's Web Speech API (live transcript).
-2. Extracts structured claim facts — product, issue types, sentiment, urgency.
-3. Inspects the damage photo, receipt, and payment screenshot the rep uploaded.
-4. Looks up the order, payment history, and shipment status in mock internal systems.
-5. Checks refund / warranty policy and customer history.
-6. Recommends an action (replacement + refund duplicate charge), with confidence and risk.
-7. Drafts a warm, on-brand customer reply.
-8. **Reads the reply aloud** via browser speech synthesis — true closed-loop voice.
-9. Creates an internal ticket with the full evidence bundle.
-10. Logs every tool call + human decision to an audit trail.
-
-All 10 steps work **fully offline** with mock data. Flip the header toggle to
-**Live · Baseten** and the agent calls Baseten Nemotron-120B for real
-structured fact extraction and real resolution reasoning. The
-**Polish with Subconscious** button on the reply rewrites it with TIM-Qwen3.6.
-The **VoiceRun panel** exposes a webhook that real phone-call agents can POST
-transcripts to and receive the agent's reply back.
+Built at Wayfair HQ during the Beat The Clock sprint (2 hours), sponsored by **Wayfair**, **Subconscious**, **Baseten**, and **Cloudflare**.
 
 ---
 
-## Quick start
+## Problem
 
-```bash
-pnpm install
-cp .env.example .env.local
-# (optional) edit .env.local and add SUBCONSCIOUS_API_KEY
-pnpm dev
-```
+Customer service claims are messy. Customers call in emotionally, upload blurry photos, mention duplicate charges, and expect fast answers — while reps manually cross-reference orders, payments, shipping, and policy docs across disconnected systems.
 
-Open <http://localhost:3000>.
-
-> Local demo mode runs without any API keys.
+ClaimLens gives support teams a single agentic workflow: **voice + vision + internal records → structured recommendation → empathetic reply → human approval**.
 
 ---
 
-## Demo script (≈2 minutes)
+## Demo scenario
 
-1. Click **Load full demo** — fills the transcript and all three pieces of evidence.
-   *(Or press the mic and read the demo claim out loud.)*
-2. Flip the header toggle from **Mock** to **Live · Baseten**.
-3. Click **Run ClaimLens agent**.
-4. Watch the **Agent investigation** timeline run all 11 steps end-to-end.
-   The audit log shows *"Facts extracted via Baseten Nemotron"* and
-   *"Resolution reasoned by Baseten Nemotron-120B"*.
-5. Point at the **Extracted facts & evidence** grid — voice, image, receipt,
-   payment, order, shipping, customer history, policy — all populated.
-6. Land on the **Recommended resolution**: *Replace the damaged dining chair
-   and refund the duplicate charge · 95% confidence · low risk.*
-7. Click **Polish with Subconscious** to rewrite the reply with TIM-Qwen3.6.
-8. Click **Read aloud** — the browser speaks the reply in a support-agent voice.
-9. Click **Approve replacement** and **Refund duplicate charge** — case becomes
-   *Resolved* and the audit log captures both human decisions.
-10. Scroll to the **Real customer calls · VoiceRun** panel — copy the webhook
-    URL and the Python agent snippet for the production phone-call hand-off.
+> *"Hi, I ordered a dining chair and it arrived yesterday with a cracked leg. I also see two charges on my card for the same amount. I need this fixed today."*
 
-### Sponsor-by-sponsor proof points in the live demo
+The agent:
 
-| Sponsor | What you'll point at | Evidence |
-|---|---|---|
-| **Subconscious** | Customer reply, after clicking *Polish with Subconscious* | Warm, on-brand rewrite from TIM-Qwen3.6 in ~2s |
-| **Baseten** | Facts panel + recommendation, after toggling **Live · Baseten** | Nemotron-120B JSON output, schema-validated, in ~1.5s |
-| **VoiceRun** | *Real customer calls · VoiceRun* panel | `/api/voicerun/webhook` accepts call transcript, returns drafted reply |
-| **Wayfair** | Mock order / payment / shipping / customer / policy under `lib/claimlens/mock-data.ts` | Single-file swap for real internal APIs |
+1. Captures the claim by **voice** (Web Speech API) or text
+2. **Inspects evidence** — damage photo, receipt, payment screenshot
+3. **Looks up** order, payments, shipment, and customer history
+4. **Checks** refund / warranty policy
+5. **Recommends** replacement + refund duplicate charge (~95% confidence)
+6. **Drafts** a customer reply, optionally **polishes** it with Subconscious
+7. **Reads the reply aloud** (browser TTS) and logs every step for FinOps audit
 
 ---
 
 ## Architecture
 
-```
-app/
-  page.tsx                    -> renders <ClaimLens />
-  api/
-    chat/route.ts             (original starter chat route — kept)
-    claim-polish/route.ts     Subconscious-polished customer reply (TIM-Qwen3.6)
-    claim-extract/route.ts    Baseten Nemotron structured fact extraction
-    claim-reason/route.ts     Baseten Nemotron resolution + reasoning
-    voicerun/webhook/route.ts VoiceRun inbound transcript webhook
+```mermaid
+flowchart LR
+  subgraph intake [Intake]
+    Voice[Voice / transcript]
+    Images[Damage · receipt · payment]
+  end
 
-components/
-  claimlens/
-    claim-lens.tsx            top-level dashboard container + mode toggle
-    voice-intake.tsx          mic + live transcript (Web Speech API)
-    evidence-upload.tsx       damage / receipt / payment tiles
-    agent-timeline.tsx        11-step investigation timeline
-    facts-panel.tsx           structured facts grid
-    resolution-panel.tsx      recommendation + reply + action buttons
-    audit-log.tsx             append-only audit trail
-    voicerun-panel.tsx        VoiceRun webhook URL + Python agent snippet
-    ui.tsx                    Card / Pill / Button / icons
+  subgraph baseten [Baseten]
+    Kimi[Kimi-K2.6 vision]
+    Nemotron[Nemotron-120B reasoning]
+  end
 
-lib/
-  claimlens/
-    types.ts                  ClaimFacts, DamageEvidence, ..., AuditLogEntry
-    mock-data.ts              orders, payments, shipping, customer, policy docs
-    mock-tools.ts             transcribeClaim, extractClaimFacts, inspectDamageEvidence, ...
-    agent-runner.ts           runMockClaimAgent — orchestrates the 11-step loop
-    agent-client.ts           extractFactsWithBaseten, reasonResolutionWithBaseten, polishReplyWithSubconscious
-    baseten.ts                OpenAI-compat provider for Nemotron-120B-A12B
-    json-parse.ts             robust JSON extractor for LLM responses
-    speech.ts                 Web Speech API helpers (STT + TTS)
+  subgraph ops [Ops layer]
+    Mock[(Mock order / payment / policy DB)]
+    Runner[11-step agent runner]
+  end
+
+  subgraph output [Output]
+    Resolution[Recommendation + confidence]
+    Subconscious[Subconscious reply polish]
+    VoiceRun[VoiceRun webhook TTS]
+  end
+
+  Voice --> Runner
+  Images --> Kimi --> Runner
+  Runner --> Mock
+  Runner --> Nemotron
+  Runner --> Resolution
+  Resolution --> Subconscious
+  Resolution --> VoiceRun
 ```
 
-The agent loop in `lib/claimlens/agent-runner.ts` is the heart of the demo. Each
-step calls a mock tool, updates the timeline, and appends to the audit log via
-streaming callbacks — so the UI feels live.
+| Layer | Technology | Role |
+|-------|------------|------|
+| **Vision** | Baseten `moonshotai/Kimi-K2.6` | Inspects uploaded images; returns structured damage / receipt / payment findings |
+| **Reasoning** | Baseten `nvidia/Nemotron-120B-A12B` | Extracts claim facts and generates resolution (Live mode) |
+| **Communication** | Subconscious `tim-qwen3.6-27b` | Rewrites the customer reply with empathy and brand voice |
+| **Phone production** | [VoiceRun](https://voicerun.com) | POST transcript to webhook → receive reply JSON → speak back to caller |
+| **Ops data** | Local mock DB | Orders, payments, shipping, policy (`lib/claimlens/mock-data.ts`) |
+
+**Design principle:** Baseten decides *what* to do. Subconscious decides *how* to say it. VoiceRun delivers it on a real phone line.
 
 ---
 
-## Sponsor integration plan
+## Quick start
 
-The local mock mode proves the UX. Each sponsor maps cleanly to one layer:
+### Prerequisites
 
-| Sponsor | Where it plugs in | What it powers | Status |
-|---|---|---|---|
-| **Baseten** | `lib/claimlens/baseten.ts`, `app/api/claim-extract/route.ts`, `app/api/claim-reason/route.ts` | Nemotron-120B-A12B does structured fact extraction + resolution reasoning when the **Live** toggle is on | **wired** |
-| **Subconscious** | `app/api/claim-polish/route.ts` | TIM-Qwen3.6 rewrites the drafted customer reply with empathy and brand voice | **wired** |
-| **VoiceRun** | `app/api/voicerun/webhook/route.ts`, `components/claimlens/voicerun-panel.tsx` | Inbound webhook for real phone-call transcripts; agent reply returned as JSON for VoiceRun TTS | **endpoint live + Python snippet shipped** |
-| **Cloudflare** | future: Worker host, KV/D1 case storage, R2 evidence blobs, Durable Objects for audit streams | Production runtime + persistence + multi-rep collaboration | placeholder |
-| **Wayfair** | swap the `ORDERS`, `PAYMENTS`, `SHIPMENTS` mocks in `lib/claimlens/mock-data.ts` for real internal APIs | Real claims with real order data | placeholder |
+- Node.js 20+
+- [pnpm](https://pnpm.io)
 
-Environment variables (`.env.example`):
+### Install & run
 
+```bash
+git clone https://github.com/LagnajeetP/hack-webapp-starter.git
+cd hack-webapp-starter
+pnpm install
+cp .env.example .env.local
+pnpm dev
 ```
-SUBCONSCIOUS_API_KEY=
-BASETEN_API_KEY=
-CLOUDFLARE_ACCOUNT_ID=
-CLOUDFLARE_API_TOKEN=
-```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+**Mock mode** runs fully offline with no API keys. For live model calls, add keys to `.env.local`:
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `BASETEN_API_KEY` | For vision + Live reasoning | Kimi-K2.6 vision, Nemotron-120B extraction/reasoning |
+| `SUBCONSCIOUS_API_KEY` | For reply polish | TIM-Qwen3.6 customer reply rewrite |
+| `VOICERUN_WEBHOOK_SECRET` | Optional | Bearer auth on `/api/voicerun/webhook` |
+| `CLOUDFLARE_*` | Future | Workers / KV / R2 production hosting |
+
+Get keys: [Subconscious](https://www.subconscious.dev/platform) · [Baseten](https://app.baseten.co/settings/api-keys)
 
 ---
 
-## How the agent works
+## Live demo script (~2 min)
 
-Each step in `runMockClaimAgent` calls one tool, marks the step as running,
-awaits the result, then marks it `done` (or `warn` if evidence was missing).
-The browser drives this directly — no backend required for the demo.
+1. Click **Load demo** — fills transcript + three evidence items (Maya Chen scenario)
+2. Toggle **Live · Baseten** in the header
+3. Click **Run ClaimLens agent** — watch the 11-step timeline
+4. Review recommendation: *Approve replacement + refund duplicate charge · 95% confidence*
+5. Click **Polish with Subconscious** → **Read aloud**
+6. **Approve replacement** and **Refund duplicate charge** — audit log captures human decisions
 
-```ts
-await step("inspect_damage", "Inspecting damage evidence", () =>
-  inspectDamageEvidence(damageEv),
-);
-```
+**Bring your own claim:** press the mic, describe any furniture issue, upload real photos — Kimi-K2.6 vision inspects them live.
 
-The 11 steps:
+---
+
+## API routes
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/inspect-evidence` | POST | Baseten Kimi-K2.6 vision — damage / receipt / payment |
+| `/api/claim-extract` | POST | Baseten Nemotron — structured fact extraction from transcript |
+| `/api/claim-reason` | POST | Baseten Nemotron — resolution + confidence + actions |
+| `/api/claim-polish` | POST | Subconscious TIM-Qwen3.6 — empathetic reply rewrite |
+| `/api/voicerun/webhook` | POST | VoiceRun intake — transcript + evidence → full resolution JSON |
+
+---
+
+## Agent pipeline (11 steps)
 
 ```
 listen → extract_facts → inspect_damage → extract_receipt →
@@ -170,58 +155,82 @@ inspect_payment → lookup_order → check_shipping → check_policy →
 generate_resolution → draft_reply → create_ticket
 ```
 
-`generate_resolution` ties everything together and produces:
-- `recommendation` (string)
-- `confidence` (0–99)
-- `risk` (low/medium/high)
-- `reasoning` (array of bullet points)
-- `actions` (refund / replacement / note)
-- `customerReply` (drafted text)
-- `ticketSummary` (internal record)
+Orchestrated in `lib/claimlens/agent-runner.ts` with live UI callbacks for timeline, audit log, and resolution panels.
 
 ---
 
-## Voice & multimodal
+## Project structure
 
-- **Speech-to-text:** `window.SpeechRecognition || window.webkitSpeechRecognition`
-  (Chrome/Edge). Falls back to a regular textarea elsewhere.
-- **Text-to-speech:** `window.speechSynthesis` — used by **Read aloud**.
-- **Image evidence:** uploaded files become data URLs and render inline.
-  The mock inspector ignores pixels and returns scripted demo facts — swap to
-  a Baseten-hosted vision model for the real inspection.
+```
+app/
+  page.tsx                         ClaimLens dashboard
+  api/
+    inspect-evidence/route.ts      Baseten Kimi vision
+    claim-extract/route.ts         Baseten Nemotron facts
+    claim-reason/route.ts          Baseten Nemotron resolution
+    claim-polish/route.ts          Subconscious reply polish
+    voicerun/webhook/route.ts      VoiceRun phone intake
+
+components/claimlens/              Dashboard UI components
+lib/claimlens/
+  agent-runner.ts                  11-step orchestration
+  vision-server.ts                   Server-side Kimi vision helper
+  baseten.ts                       Baseten OpenAI-compatible providers
+  mock-data.ts                     Wayfair mock ops data
+  mock-tools.ts                    Local tool implementations + fallbacks
+  agent-client.ts                  Browser → API client wrappers
+  speech.ts                        Web Speech STT + TTS helpers
+  types.ts                         Shared TypeScript types
+```
 
 ---
 
-## What's *not* real (and what to swap)
+## Tech stack
 
-| Mock | Real swap |
-|---|---|
-| `transcribeClaim` (echo) | Whisper API / Deepgram / browser STT (already wired) |
-| `inspectDamageEvidence` | Baseten vision model (e.g. Llama-3.2-Vision, GPT-4o on Baseten) |
-| `extractReceiptFacts` | Baseten OCR + structured extraction |
-| `inspectPaymentEvidence` | Same vision pipeline + Stripe/Adyen rules |
-| `getOrder` / `getPaymentStatus` / `getShipmentStatus` | Wayfair internal APIs |
-| `generateResolution` | Subconscious TIM-Qwen3.6 with `response_format` JSON schema |
-| `polishReplyWithSubconscious` | Already wired — set `SUBCONSCIOUS_API_KEY` |
+- **Framework:** Next.js 16, React 19, TypeScript
+- **Styling:** Tailwind CSS 4
+- **AI SDK:** Vercel AI SDK v6
+- **Models:** Baseten Model APIs, Subconscious TIM-Qwen3.6
+- **Voice:** Browser Web Speech API (STT/TTS), VoiceRun webhook (production)
 
 ---
 
-## Future integrations
+## What's mocked vs production-ready
 
-- **Real call-in audio** — VoiceRun (<https://voicerun.com>) to terminate phone
-  calls and stream audio into Subconscious-driven STT.
-- **Live agent assist** — show ClaimLens output to the human rep in real time
-  while they're still on the phone.
-- **Auto-escalation** — when confidence < 65%, route to a senior rep with the
-  full evidence bundle pre-attached.
-- **Audit export** — push the audit log to a finance/compliance system for
-  every approved refund.
+| Component | Status |
+|-----------|--------|
+| Voice intake (browser STT) | ✅ Wired |
+| Image vision (Baseten Kimi-K2.6) | ✅ Wired |
+| Fact extraction + resolution (Baseten Nemotron) | ✅ Wired (Live mode) |
+| Reply polish (Subconscious) | ✅ Wired |
+| VoiceRun webhook | ✅ Wired |
+| Order / payment / shipping / policy DB | 🔶 Mock — swap `mock-data.ts` for Wayfair APIs |
+| Cloudflare Workers / KV / R2 | 🔶 Planned |
+
+---
+
+## Deploy
+
+Works on [Vercel](https://vercel.com) or any Node host:
+
+```bash
+pnpm build && pnpm start
+```
+
+Set environment variables in your host dashboard. Never commit `.env.local`.
 
 ---
 
 ## Links
 
-- Subconscious docs · <https://docs.subconscious.dev/overview>
-- Baseten model APIs · <https://docs.baseten.co/inference/model-apis/overview>
-- VoiceRun (real phone calls) · <https://voicerun.com>
-- Vercel AI SDK agents · <https://ai-sdk.dev/docs/agents/overview>
+- [ClaimLens showcase](https://hack.subconscious.dev/hacks/claimlens)
+- [Beat The Clock hack archive](https://hack.subconscious.dev)
+- [Subconscious docs](https://docs.subconscious.dev/overview)
+- [Baseten Model APIs](https://docs.baseten.co/inference/model-apis/overview)
+- [VoiceRun](https://voicerun.com)
+
+---
+
+## License
+
+MIT — see [LICENSE](./LICENSE).

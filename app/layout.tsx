@@ -15,7 +15,23 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ClaimLens — Multimodal voice agent for refund & warranty resolution",
   description:
-    "ClaimLens turns customer voice calls, damage photos, receipts, payment screenshots, and order records into verified refund or warranty resolutions. Built on Subconscious, Vercel AI SDK, Baseten, and Cloudflare.",
+    "Track winner at Beat The Clock Agent Hack. ClaimLens turns voice calls, damage photos, receipts, and order records into verified resolutions using Baseten, Subconscious, and VoiceRun.",
+  keywords: [
+    "ClaimLens",
+    "AI agents",
+    "customer service",
+    "FinOps",
+    "Baseten",
+    "Subconscious",
+    "Wayfair",
+    "hackathon",
+  ],
+  openGraph: {
+    title: "ClaimLens",
+    description:
+      "Multimodal voice agent for refund and warranty resolution — Beat The Clock Agent Hack track winner.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
