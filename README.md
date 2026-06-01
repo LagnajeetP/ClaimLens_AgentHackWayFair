@@ -100,8 +100,8 @@ flowchart LR
 ### Install & run
 
 ```bash
-git clone https://github.com/LagnajeetP/hack-webapp-starter.git
-cd hack-webapp-starter
+git clone https://github.com/LagnajeetP/ClaimLens_AgentHackWayFair.git
+cd ClaimLens_AgentHackWayFair
 pnpm install
 cp .env.example .env.local
 pnpm dev
